@@ -8,9 +8,9 @@ import ast
 from sklearn.model_selection import train_test_split
 
 
-mydataset = pd.read_csv("./VAE_points.csv")
-track_images = mydataset.image[:1000]
-traj_data = mydataset.trajectory_points[:1000]
+mydataset = pd.read_csv("../VAE_points.csv")
+track_images = mydataset.image
+traj_data = mydataset.trajectory_points
 (imageTrain, imageTest, trajTrain, trajTest) = (train_test_split(track_images, traj_data, 
                                 test_size=0.02, random_state=42))
 
@@ -27,10 +27,11 @@ class makeTrack_trajectoryDataset():
         n = len(self.X)
         for i in range(1, n):
             print(i)
-            image = cv2.imread('./images/'+self.X.iloc[i])
+            image = cv2.imread('../images/'+self.X.iloc[i])
             image = cv2.resize(image, (200,152))
             image = image.astype('float32')
-            images.append(image)
+            image_ = image.transpose((2, 0, 1))
+            images.append(image_)
             traj = ast.literal_eval(self.y.iloc[i])
             final_traj = traj.copy()[1:-1]
             removePts = random.sample(range(1, len(final_traj)-1), len(final_traj) - self.num_points-2)
@@ -58,8 +59,8 @@ if make_data:
     train_data_im, train_data_tr = train_data.generate()
     test_data = makeTrack_trajectoryDataset(imageTest, trajTest)
     test_data_im, test_data_tr = test_data.generate()
-    np.save("test_data_im.npy", test_data_im)
-    np.save("test_data_tr.npy", test_data_tr)
-    np.save("train_data_im.npy", train_data_im)
-    np.save("train_data_tr.npy", train_data_tr)
+    np.save("../Numpy_Dataset/test_data_im_torch.npy", test_data_im)
+    np.save("../Numpy_Dataset/test_data_tr_torch.npy",  test_data_tr)
+    np.save("../Numpy_Dataset/train_data_im_torch.npy", train_data_im)
+    np.save("../Numpy_Dataset/train_data_tr_torch.npy", train_data_tr)
 
