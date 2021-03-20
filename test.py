@@ -4,18 +4,16 @@ import gc
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
 import cv2
+from torch.utils.data import TensorDataset, DataLoader
     # import torch
 gc.collect()
 torch.cuda.empty_cache()
-train_images = np.load("../Numpy_Dataset/train_data_im_torch.npy")
-test_images = np.load("../Numpy_Dataset/test_data_im_torch.npy")
+train_images = np.load("../Numpy_Dataset/test_data_im_torch.npy")
 train_images = train_images/255
-test_images = test_images/255
 _,_,H,W = train_images.shape
 # print(H,W)
-BATCH_SIZE = 32
+BATCH_SIZE = 1
 LATENT_SIZE = 50
 imageTensor = torch.Tensor(train_images)
 dataset = TensorDataset(imageTensor, imageTensor)
@@ -72,48 +70,25 @@ class VAE(nn.Module):
         mu, log_var = self.encoder(x)
         z = self.sampling(mu, log_var)
         return self.decoder(z), mu, log_var
+vae = torch.load("vae_model_30.pt")
 
-# build model
-vae = VAE(H,W)
-# vae = torch.load("vae_model_30.pt")
-pytorch_total_params = sum(p.numel() for p in vae.parameters() if p.requires_grad)
-# print(pytorch_total_params)
-if torch.cuda.is_available():
-    vae.cuda()
+def getEncoding(image, getOutImg = 0):
+    image = cv2.resize(image, (200, 152))
+    image = image.transpose((2,0,1))
+    input_img = torch.Tensor(image)
+    input_img = input_img.unsqueeze(0)
+    m,var = vae.encoder(input_img.cuda())
+    z = vae.sampling(m, var)
+    img = vae.decoder(z)
+    img = img.detach().cpu().numpy()
+    img = img[0].transpose((1,2,0))
 
-optimizer = optim.Adam(vae.parameters(), lr = 0.001)
-# return reconstruction error + KL divergence losses
-def loss_function(recon_x, x, mu, log_var):
-    BCE = F.binary_cross_entropy(recon_x.view(-1, H*W*3), x.view(-1, H*W*3), reduction='sum')
-    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-    return BCE + KLD
+    if getOutImg:
+        cv2.imshow("img", img)
+        cv2.imshow("img3", image.transpose(1,2,0))
+        cv2.waitKey(0)
 
-def train(epoch):
-    vae.train()
-    train_loss = 0
-    for batch_idx, (data, _) in enumerate(dataset):
-        if(data.shape[0] == BATCH_SIZE):
-            data = data.cuda()
-            optimizer.zero_grad()
-            
-            recon_batch, mu, log_var = vae(data)
-            # print(recon_batch.shape)
-            loss = loss_function(recon_batch, data, mu, log_var)
-            
-            loss.backward()
-            train_loss += loss.item()
-            optimizer.step()
-            
-            if batch_idx % 50 == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), len(dataset.dataset),
-                    100. * batch_idx / len(dataset), loss.item() / len(data)))
-    print('====> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(dataset.dataset)))
+    return z
 
-    if epoch%10==0:
-        torch.save(vae, "vae_model_"+str(epoch)+".pt")
-        # exit()
-
-for epoch in range(0, 101):
-    train(epoch)
-
+img = cv2.imread("../images/VAE_img_798.jpg")
+getEncoding(img, 1)
