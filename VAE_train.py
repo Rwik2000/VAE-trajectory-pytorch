@@ -71,45 +71,45 @@ class VAE(nn.Module):
         return self.decoder(z), mu, log_var
 
 # build model
-# vae = VAE(H,W)
-vae = torch.load("vae_model_30.pt")
+vae = VAE(H,W)
+# vae = torch.load("vae_model_30.pt")
 pytorch_total_params = sum(p.numel() for p in vae.parameters() if p.requires_grad)
-print(pytorch_total_params)
-# if torch.cuda.is_available():
-#     vae.cuda()
+# print(pytorch_total_params)
+if torch.cuda.is_available():
+    vae.cuda()
 
-# optimizer = optim.Adam(vae.parameters(), lr = 0.001)
-# # return reconstruction error + KL divergence losses
-# def loss_function(recon_x, x, mu, log_var):
-#     BCE = F.binary_cross_entropy(recon_x.view(-1, H*W*3), x.view(-1, H*W*3), reduction='sum')
-#     KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-#     return BCE + KLD
+optimizer = optim.Adam(vae.parameters(), lr = 0.001)
+# return reconstruction error + KL divergence losses
+def loss_function(recon_x, x, mu, log_var):
+    BCE = F.binary_cross_entropy(recon_x.view(-1, H*W*3), x.view(-1, H*W*3), reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return BCE + KLD
 
-# def train(epoch):
-#     vae.train()
-#     train_loss = 0
-#     for batch_idx, (data, _) in enumerate(dataset):
-#         if(data.shape[0] == BATCH_SIZE):
-#             data = data.cuda()
-#             optimizer.zero_grad()
+def train(epoch):
+    vae.train()
+    train_loss = 0
+    for batch_idx, (data, _) in enumerate(dataset):
+        if(data.shape[0] == BATCH_SIZE):
+            data = data.cuda()
+            optimizer.zero_grad()
             
-#             recon_batch, mu, log_var = vae(data)
-#             # print(recon_batch.shape)
-#             loss = loss_function(recon_batch, data, mu, log_var)
+            recon_batch, mu, log_var = vae(data)
+            # print(recon_batch.shape)
+            loss = loss_function(recon_batch, data, mu, log_var)
             
-#             loss.backward()
-#             train_loss += loss.item()
-#             optimizer.step()
+            loss.backward()
+            train_loss += loss.item()
+            optimizer.step()
             
-#             if batch_idx % 50 == 0:
-#                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-#                     epoch, batch_idx * len(data), len(dataset.dataset),
-#                     100. * batch_idx / len(dataset), loss.item() / len(data)))
-#     print('====> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(dataset.dataset)))
+            if batch_idx % 50 == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(data), len(dataset.dataset),
+                    100. * batch_idx / len(dataset), loss.item() / len(data)))
+    print('====> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(dataset.dataset)))
 
-#     if epoch%10==0:
-#         torch.save(vae, "vae_model_"+str(epoch)+".pt")
-#         # exit()
+    if epoch%10==0:
+        torch.save(vae, "vae_model_"+str(epoch)+".pt")
+        # exit()
 
-# for epoch in range(30, 101):
-#     train(epoch)
+for epoch in range(0, 101):
+    train(epoch)
