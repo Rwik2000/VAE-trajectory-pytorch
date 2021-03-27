@@ -71,7 +71,7 @@ class VAE(nn.Module):
         z = self.sampling(mu, log_var)
         return self.decoder(z), mu, log_var
 
-vae = torch.load("vae_model_10.pt")
+vae = torch.load("./models/vae_model_10.pt")
 
 def SaveEncodings():
     encodings = []

@@ -111,7 +111,7 @@ def train(epoch):
     print('====> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(dataset.dataset)))
 
     if epoch%10==0:
-        torch.save(vae, "vae_model_"+str(epoch)+".pt")
+        torch.save(vae, "./models/vae_model_"+str(epoch)+".pt")
         # exit()
 
 for epoch in range(0, 101):
