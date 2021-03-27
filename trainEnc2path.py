@@ -16,7 +16,7 @@ load_track = np.load("../Numpy_Dataset/train_data_tr_torch.npy")
 loadEnc_torch = torch.Tensor(loadEnc)
 load_track_torch = torch.Tensor(load_track)
 
-# print(load_tr[0])
+
 
 # exit()
 BATCH_SIZE = 32
