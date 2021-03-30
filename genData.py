@@ -6,13 +6,13 @@ import cv2, random
 import numpy as np
 import ast
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 
 mydataset = pd.read_csv("../VAE_points.csv")
 track_images = mydataset.image
 traj_data = mydataset.trajectory_points
-(imageTrain, imageTest, trajTrain, trajTest) = (train_test_split(track_images, traj_data, 
-                                test_size=0.02, random_state=42))
+(imageTrain, imageTest, trajTrain, trajTest) = (train_test_split(track_images, traj_data,test_size=0.02,shuffle=False))
 
 class makeTrack_trajectoryDataset():
     def __init__(self, path, trajectory):

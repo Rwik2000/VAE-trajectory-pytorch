@@ -17,7 +17,7 @@ BATCH_SIZE = 1
 LATENT_SIZE = 50
 imageTensor = torch.Tensor(train_images)
 dataset = TensorDataset(imageTensor, imageTensor)
-dataset = DataLoader(dataset, batch_size=BATCH_SIZE)
+dataset = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 class VAE(nn.Module):
     def __init__(self, H, W):

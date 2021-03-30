@@ -1,14 +1,13 @@
-from numpy.core.defchararray import mod
-# from Train import LATENT_SIZE
+
 import numpy as np
 import torch
-import gc
 import torch.nn as nn
 import torch.nn.functional as F
 import cv2
 import torch.optim as optim
+from net_enc2path import encodeToTraj
 from torch.utils.data import TensorDataset, DataLoader
-import time
+from utils import find_bezier_trajectory
 
 loadEnc = np.load("../Numpy_Dataset/train_data_encodings_torch.npy")
 # loadEnc.transpose(0, 2 ,1)
@@ -36,12 +35,8 @@ class encodeToTraj(nn.Module):
         self.l5 = nn.Linear(256, 68)
     
     def forward(self, x):
-        # print(x.shape)
-        # h = F.relu(self.cvd1(x))
-        # h = h.view(BATCH_SIZE, -1)
         h = F.relu(self.l1(x))
-        # h= F.relu(self.d1(h))
-        # print(h.shape)
+
         h = F.relu(self.l2(h))
         h = F.relu(self.l3(h))
         h = F.relu(self.l4(h))
@@ -51,12 +46,9 @@ class encodeToTraj(nn.Module):
 def loss_function(output, recons):
     loss = F.mse_loss(recons, output, reduction='sum')
     return loss
-model = encodeToTraj(LATENT_SIZE)
+# model = encodeToTraj(LATENT_SIZE)
 
-'''
-uncomment while testing
-'''
-model = torch.load("./models/trajec_model_100.pt")
+
 # if torch.cuda.is_available():
 #     model.cuda()
 # optimizer = optim.Adam(model.parameters(), lr = 0.00001)
@@ -91,12 +83,14 @@ model = torch.load("./models/trajec_model_100.pt")
 #     train(epoch)
 
 '''
-testing encoder to path
+testing encoder to path , uncomment while testing
 '''
+model = torch.load("./models/trajec_model_100.pt")
 def test():
     # input_img = input_img.unsqueeze(0)
     for i in range(1000):
         num =i
+        path_img = cv2.imread("../Images/VAE_img_"+str(i+1)+".jpg")
         inp = torch.Tensor(loadEnc[num])
         outp = load_track[num]
         inp = inp.cuda()
@@ -110,12 +104,13 @@ def test():
         outp = outp.reshape(2,-1).T
         k = (k*[800, 600]).astype(int)
         outp = (outp*[800, 600]).astype(int)
+        k = find_bezier_trajectory(k, 50)
         # print(np.uint8(k*[800, 600]))\
-        for i in range(len(outp)-1):
-            fin_image = cv2.line(fin_image, tuple(k[i]), tuple(k[i+1]), (255,255,255), 3)
-            fin_image = cv2.line(fin_image, tuple(outp[i]), tuple(outp[i+1]), (255,255,255), 3)
+        for j in range(len(k)-1):
+            path_img = cv2.line(path_img, tuple(k[j]), tuple(k[j+1]), (255,0,0), 3)
+            # fin_image = cv2.line(fin_image, tuple(outp[i]), tuple(outp[i+1]), (255,255,255), 3)
         
-        cv2.imshow("x.png", fin_image)
+        cv2.imshow("y.png", path_img)
         cv2.waitKey(1000)
     # print(k)
 
