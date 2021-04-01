@@ -18,6 +18,6 @@ class encodeToTraj(nn.Module):
         h = F.relu(self.l2(h))
         h = F.relu(self.l3(h))
         h = F.relu(self.l4(h))
-        h = F.sigmoid(self.l5(h))
+        h = torch.sigmoid(self.l5(h))
 
         return h

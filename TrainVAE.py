@@ -5,25 +5,26 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 from net_VAE import VAE
-
+    # import torch
+# gc.collect()
+# torch.cuda.empty_cache()
 train_images = np.load("../Numpy_Dataset/train_data_im_torch.npy")
-test_images = np.load("../Numpy_Dataset/test_data_im_torch.npy")
 train_images = train_images/255
-test_images = test_images/255
 _,_,H,W = train_images.shape
-
+# print(H,W)
 BATCH_SIZE = 32
 LATENT_SIZE = 25
 imageTensor = torch.Tensor(train_images)
 dataset = TensorDataset(imageTensor, imageTensor)
-dataset = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
+dataset = DataLoader(dataset, batch_size=BATCH_SIZE)
 
-vae = VAE(H,W, LATENT_SIZE, BATCH_SIZE)
-pytorch_total_params = sum(p.numel() for p in vae.parameters() if p.requires_grad)
+# build model
+vae = VAE(H,W,LATENT_SIZE, BATCH_SIZE)
+# vae = torch.load("vae_model_30.pt")
 if torch.cuda.is_available():
     vae.cuda()
 
-optimizer = optim.Adam(vae.parameters(), lr = 0.001)
+optimizer = optim.Adam(vae.parameters(), lr = 0.0001)
 # return reconstruction error + KL divergence losses
 def loss_function(recon_x, x, mu, log_var):
     BCE = F.mse_loss(recon_x.view(-1, H*W*3), x.view(-1, H*W*3), reduction='sum')
@@ -52,9 +53,9 @@ def train(epoch):
                     100. * batch_idx / len(dataset), loss.item() / len(data)))
     print('====> Epoch: {} Average loss: {:.4f}'.format(epoch, train_loss / len(dataset.dataset)))
 
-    if epoch%10==0:
-        torch.save(vae, "./models/vae_model_"+str(epoch)+".pt")
-        # exit()
+    if epoch==30:
+        torch.save(vae, "vae_model_"+str(epoch)+".pt")
+        exit()
 
-for epoch in range(0, 101):
+for epoch in range(0, 31):
     train(epoch)
